@@ -1,0 +1,104 @@
+// This is the build.gradle file for TurboX
+// Copyright (C) 2015 Dani Rodríguez <danirod@outlook.com> and contributors
+
+buildscript {
+    repositories { mavenCentral() }
+    dependencies {
+        classpath 'es.danirod:gradle-propgen-plugin:0.1.0'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+apply plugin: 'es.danirod.propgen'
+
+group = 'es.danirod'
+version = turboxVersion // Declared in ext
+archivesBaseName = 'turbox'
+
+sourceCompatibility = 1.6
+
+sourceSets {
+    main.java.srcDirs = [ 'src/main/java' ]
+    main.resources.srcDirs = [ 'src/main/resources' ]
+    test.java.srcDirs = [ 'src/test/java' ]
+    test.resources.srcDirs = [ 'src/test/resources' ]
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+propgen {
+    defaultLocation = 'src/main/resources'
+    file('build') {
+        property 'build.version', project.version
+        property 'build.date', new Date().toString()
+        property 'debug.on', 'true'
+    }
+}
+
+compileJava.dependsOn(generateProperties)
+clean.finalizedBy(cleanProperties)
+
+dependencies {
+    compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+
+    testCompile "junit:junit:$junitVersion"
+    testCompile "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts { archives javadocJar, sourcesJar }
+signing { sign configurations.archives }
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
+        }
+        snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
+        }
+        pom.project {
+            name archivesBaseName
+            packaging 'jar'
+            description 'Utility library for libGDX'
+            url 'https://github.com/danirod/turbox'
+
+            scm {
+                connection 'scm:git:https://github.com/danirod/turbox.git'
+                developerConnection 'scm:git:https://github.com/danirod/turbox.git'
+                url 'https://github.com/danirod/turbox'
+            }
+
+            licenses {
+                license {
+                    name 'The Apache License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'danirod'
+                    name 'Dani Rodríguez'
+                    email 'danirod@outlook.com'
+                }
+            }
+        }
+    }
+}
