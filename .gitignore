@@ -2,3 +2,6 @@
 .gradle/
 *.iml
 build/
+
+# This file is generated on build time. No need to store this in the repo.
+src/main/resources/build.properties
