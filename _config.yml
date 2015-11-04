@@ -1,0 +1,7 @@
+title: TurboX
+description: TurboX is a support library for libGDX designed for saving time from rewrites.
+baseurl: "/turbox" 
+url: "http://www.danirod.es"
+
+# Build settings
+markdown: kramdown
